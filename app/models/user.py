@@ -1,9 +1,7 @@
 from datetime import datetime
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.models.base import BaseModel
-from app.models.order import OrderModel
 
 
 class UserModel(BaseModel):

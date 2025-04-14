@@ -1,10 +1,8 @@
 from enum import Enum
 from typing import Optional
-
 from sqlalchemy import String, Integer, Float, UniqueConstraint, Index, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
-from app.models.part import PartModel
 
 
 class EngineType(str, Enum):

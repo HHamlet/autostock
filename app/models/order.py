@@ -6,8 +6,6 @@ from sqlalchemy import Integer, ForeignKey, String, Float, DateTime, CheckConstr
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
-from app.models.order_item import OrderItemModel
-from app.models.user import UserModel
 
 
 class OrderStatus(str, Enum):

@@ -1,12 +1,6 @@
-from sqlalchemy import String, Table, ForeignKey, Column, CheckConstraint
+from sqlalchemy import String, Table, ForeignKey, Column, CheckConstraint, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.models.car import CarModel
-from app.models.category import CategoryModel
-from app.models.manufacturer import ManufacturerModel
 from app.models.base import BaseModel
-from app.models.warehouse import WarehouseModel
-from app.models.order import OrderModel
 
 
 class PartModel(BaseModel):
@@ -23,7 +17,7 @@ class PartModel(BaseModel):
     price: Mapped[float] = mapped_column(nullable=False)
     qty_in_stock: Mapped[int] = mapped_column(nullable=False, )
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    category_name: Mapped[int] = mapped_column(ForeignKey("categories.name"))
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
 
     category: Mapped["CategoryModel"] = relationship(back_populates="parts", lazy="joined")
     manufacturers: Mapped[list["ManufacturerModel"]] = relationship(secondary="part_manufacturer", back_populates="parts", lazy="joined")

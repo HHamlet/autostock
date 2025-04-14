@@ -1,9 +1,6 @@
 from sqlalchemy import Integer, ForeignKey, Float, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.models.base import BaseModel
-from app.models.order import OrderModel
-from app.models.part import PartModel
 
 
 class OrderItemModel(BaseModel):
