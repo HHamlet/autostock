@@ -25,6 +25,7 @@ class CarModel(BaseModel):
     model: Mapped[str] = mapped_column(String(50), nullable=False)
     year_start: Mapped[int] = mapped_column(Integer, nullable=False)
     year_end: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    engine_model: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     engine_type: Mapped[Optional[EngineType]] = mapped_column(String(50), nullable=True)
     engine_volume: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     body_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
