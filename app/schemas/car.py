@@ -9,7 +9,7 @@ class CarBase(BaseModel):
     year_end: Optional[int] = None
     engine_model: Optional[str] = None
     engine_type: Optional[str] = None
-    engine_volume: Optional[str] = None
+    engine_volume: Optional[float] = None
     body_type: Optional[str] = None
 
 
@@ -24,7 +24,7 @@ class CarUpdate(BaseModel):
     year_end: Optional[int] = None
     engine_model: Optional[str] = None
     engine_type: Optional[str] = None
-    engine_volume: Optional[str] = None
+    engine_volume: Optional[float] = None
     body_type: Optional[str] = None
 
 
@@ -32,4 +32,4 @@ class Car(CarBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
