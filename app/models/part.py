@@ -12,10 +12,10 @@ class PartModel(BaseModel):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
-    part_number: Mapped[str] = mapped_column(String(50), nullable=False)
-    manufacturer_part_number: Mapped[str]
+    part_number: Mapped[str] = mapped_column(String(20), nullable=True)
+    manufacturer_part_number: Mapped[str] = mapped_column(String(20), nullable=False)
     price: Mapped[float] = mapped_column(nullable=False)
-    qty_in_stock: Mapped[int] = mapped_column(nullable=False, )
+    qty_in_stock: Mapped[int] = mapped_column(nullable=False,)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
 
