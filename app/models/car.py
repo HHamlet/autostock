@@ -8,6 +8,8 @@ from app.models.base import BaseModel
 class EngineType(str, Enum):
     GASOLINE = "gasoline"
     DIESEL = "diesel"
+    TURBOCHARGED = "turbocharged"
+    TURBO_DIESEL = "turbo-diesel"
     ELECTRIC = "electric"
     HYBRID = "hybrid"
 
@@ -15,7 +17,7 @@ class EngineType(str, Enum):
 class CarModel(BaseModel):
     __tablename__ = 'cars'
     __table_args__ = (
-        UniqueConstraint('brand', 'model', 'year_start', 'engine_type', name='uix_car_definition'),
+        UniqueConstraint('brand', 'model', 'year_start', 'engine_type', 'engine_model', name='uix_car_definition'),
         Index('idx_cars_brand_model', 'brand', 'model'),
         CheckConstraint('year_end IS NULL OR year_end >= year_start', name='check_year_range'),
     )
