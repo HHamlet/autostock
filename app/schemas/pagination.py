@@ -8,7 +8,7 @@ class Paginate(BaseModel):
     per_page: int
 
 
-async def pagination_param(
+def pagination_param(
     page: int = Query(ge=1, required=False, default=1, le=5000),
     per_page: int = Query(ge=1, required=False, default=10, le=100),
 ):

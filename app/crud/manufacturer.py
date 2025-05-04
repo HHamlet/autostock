@@ -8,14 +8,15 @@ from app.models import ManufacturerModel, UserModel
 from app.schemas.manufacturer import ManufacturerCreate, ManufacturerUpdate
 from app.schemas.pagination import Paginate, pagination_param, object_as_dict
 
-paginate = Annotated[Paginate, Depends(pagination_param)]
-offset = (paginate.page - 1) * paginate.per_page
+paginate_dep = Annotated[Paginate, Depends(pagination_param)]
 
 
-async def read_manufacturers(db: AsyncSession = Depends(get_async_db),):
+async def read_manufacturers(paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+
+    offset = (paginate.page - 1) * paginate.per_page
 
     result = await db.execute(select(ManufacturerModel).limit(int(paginate.per_page)).offset(offset))
-    manufacturers = result.scalars().all()
+    manufacturers = result.unique().scalars().all()
     dict_manufacturer = [await object_as_dict(manufacturer) for manufacturer in manufacturers]
 
     return dict_manufacturer

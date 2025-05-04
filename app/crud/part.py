@@ -10,27 +10,27 @@ from app.models.car import CarModel
 from app.models import PartModel, UserModel
 from app.schemas.part import PartCreate, PartUpdate
 
-paginate = Annotated[Paginate, Depends(pagination_param)]
-offset = (paginate.page - 1) * paginate.per_page
+paginate_dep = Annotated[Paginate, Depends(pagination_param)]
+# offset = (paginate.page - 1) * paginate.per_page
 
 
-async def get_part_by_name(name: str, db: AsyncSession = Depends(get_async_db),):
-
+async def get_part_by_name(name: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db), ):
+    offset = (paginate.page - 1) * paginate.per_page
     result = await db.execute(select(PartModel).filter(PartModel.name.ilike(f"%{name}%")).
                               limit(int(paginate.per_page)).offset(offset))
 
-    parts = result.scalars().all()
+    parts = result.unique().scalars().all()
     dict_part = [await object_as_dict(part) for part in parts]
 
     return dict_part
 
 
-async def get_part_by_pn(part_n: str, db: AsyncSession = Depends(get_async_db),):
-
+async def get_part_by_pn(part_n: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+    offset = (paginate.page - 1) * paginate.per_page
     result = await db.execute(select(PartModel).filter(PartModel.name == part_n).
                               limit(int(paginate.per_page)).offset(offset))
 
-    parts = result.scalars().all()
+    parts = result.unique().scalars().all()
     dict_part = [await object_as_dict(part) for part in parts]
 
     return dict_part
@@ -168,7 +168,7 @@ async def delete_part(part_id: int, db: AsyncSession = Depends(get_async_db),
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-async def get_compatible_parts(car_id: int, db: AsyncSession = Depends(get_async_db),):
+async def get_compatible_parts(car_id: int, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
 
     result = await db.execute(select(CarModel).filter(CarModel.id == car_id))
     car = result.scalars().first()
@@ -176,8 +176,9 @@ async def get_compatible_parts(car_id: int, db: AsyncSession = Depends(get_async
     if not car:
         raise HTTPException(status_code=404, detail="Car not found", )
 
+    offset = (paginate.page - 1) * paginate.per_page
     result = await db.execute(select(PartModel).filter(PartModel.cars.any(id=car_id)).
                               limit(int(paginate.per_page)).offset(offset))
-    parts = result.scalars().all()
+    parts = result.unique().scalars().all()
     dict_part = [await object_as_dict(part) for part in parts]
     return dict_part
