@@ -21,7 +21,7 @@ class Warehouse(WarehouseBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class WarehousePartCreate(BaseModel):
@@ -29,7 +29,7 @@ class WarehousePartCreate(BaseModel):
     quantity: int
 
     @field_validator('quantity')
-    def quantity_must_be_non_negative(self, v):
+    def quantity_must_be_non_negative(cls, v: int):
         if v < 0:
             raise ValueError('Quantity must be non-negative')
         return v
