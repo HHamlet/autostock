@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Auto Parts Inventory{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if current_user %}
+    <div class="alert alert-success">
+        <i class="fas fa-user me-2"></i>Welcome, {{ current_user.username }}!
+    </div>
+   {% endif %}
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+            <p class="text-muted">Overview of your auto parts inventory system</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-white">Total Parts</h5>
+                            <h2 class="text-white" id="total-parts">-</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-box fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-white">Categories</h5>
+                            <h2 class="text-white" id="total-categories">-</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tags fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-white">Warehouses</h5>
+                            <h2 class="text-white" id="total-warehouses">-</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-warehouse fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-dark">Manufacturers</h5>
+                            <h2 class="text-dark" id="total-manufacturers">-</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-industry fa-2x text-dark-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="/parts/new" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-plus me-1"></i>Add New Part
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="/categories/new" class="btn btn-outline-success w-100">
+                                <i class="fas fa-plus me-1"></i>Add Category
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="/warehouses/new" class="btn btn-outline-info w-100">
+                                <i class="fas fa-plus me-1"></i>Add Warehouse
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="/manufacturers/new" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-plus me-1"></i>Add Manufacturer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity / Low Stock Alert -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alerts</h5>
+                </div>
+                <div class="card-body">
+                    <div id="low-stock-alerts">
+                        <p class="text-muted">Loading stock information...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Quick Search</h5>
+                </div>
+                <div class="card-body">
+                    <form id="quick-search-form">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="search-query" placeholder="Search parts by name or part number...">
+                        </div>
+                        <div class="mb-3">
+                            <select class="form-select" id="search-type">
+                                <option value="name">Search by Name</option>
+                                <option value="part_number">Search by Part Number</option>
+                                <option value="manufacturer_part_number">Search by Manufacturer Part Number</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load dashboard statistics
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardStats();
+    
+    // Quick search form handler
+    document.getElementById('quick-search-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const query = document.getElementById('search-query').value;
+        const type = document.getElementById('search-type').value;
+        if (query.trim()) {
+            window.location.href = `/parts?${type}=${encodeURIComponent(query)}`;
+        }
+    });
+});
+
+async function loadDashboardStats() {
+    try {
+        // These would typically come from API endpoints
+        // For now, showing placeholders until backend endpoints are available
+        document.getElementById('total-parts').textContent = 'Loading...';
+        document.getElementById('total-categories').textContent = 'Loading...';
+        document.getElementById('total-warehouses').textContent = 'Loading...';
+        document.getElementById('total-manufacturers').textContent = 'Loading...';
+        
+        // Low stock alerts placeholder
+        document.getElementById('low-stock-alerts').innerHTML = '<p class="text-muted">No low stock alerts at this time.</p>';
+    } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+    }
+}
+</script>
+{% endblock %}
