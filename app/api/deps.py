@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import AsyncGenerator
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -19,7 +19,14 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(db: AsyncSession = Depends(get_async_db),
-                           token: str = Depends(reusable_oauth2)) -> UserModel:
+                           token: str = Depends(reusable_oauth2),
+                           access_token_cookie: str = Cookie(None)) -> UserModel:
+
+    if not token and access_token_cookie:
+        token = access_token_cookie.replace("Bearer ", "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     token_data = verify_access_token(token)
     if token_data.exp < datetime.now(timezone.utc):
         raise HTTPException(
