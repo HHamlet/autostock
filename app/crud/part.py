@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import Depends, HTTPException, Response, status
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.pagination import Paginate, pagination_param, object_as_dict
@@ -8,10 +8,9 @@ from app.api.deps import get_async_db, get_current_active_admin
 from app.models.manufacturer import ManufacturerModel
 from app.models.car import CarModel
 from app.models import PartModel, UserModel
-from app.schemas.part import PartCreate, PartUpdate
+from app.schemas.part import PartCreate, PartUpdate, PartWithRelations
 
 paginate_dep = Annotated[Paginate, Depends(pagination_param)]
-# offset = (paginate.page - 1) * paginate.per_page
 
 
 async def get_part_by_name(name: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db), ):
@@ -49,16 +48,28 @@ async def get_part_by_id(part_id: int, db: AsyncSession = Depends(get_async_db),
     result = await db.execute(select(PartModel).options(
      selectinload(PartModel.manufacturers), selectinload(PartModel.cars), selectinload(PartModel.category),)
                               .filter(PartModel.id == part_id))
-    part = result.scalars().all()
-
+    part = result.scalar_one_or_none()
     if not part:
         raise HTTPException(status_code=404, detail="Part not found",)
 
-    return part
+    part_dict = PartWithRelations.model_validate(part)
+    return part_dict
 
 
-async def get_parts():
-    pass
+async def get_all_parts(paginate: paginate_dep, db: AsyncSession = Depends(get_async_db), ):
+    offset = (paginate.page - 1) * paginate.per_page
+    total_result = await db.execute(select(func.count()).select_from(PartModel))
+    total = total_result.scalar()
+
+    result = await db.execute(select(PartModel).limit(int(paginate.per_page)).offset(offset))
+
+    parts = result.unique().scalars().all()
+    dict_part = [await object_as_dict(part) for part in parts]
+
+    return {"items": dict_part,
+            "total": total,
+            "page": paginate.page,
+            "per_page": paginate.per_page}
 
 
 async def create_part(part_in: PartCreate, db: AsyncSession = Depends(get_async_db),
@@ -168,7 +179,7 @@ async def delete_part(part_id: int, db: AsyncSession = Depends(get_async_db),
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-async def get_compatible_parts(car_id: int, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+async def get_compatible_parts(car_id: int, db: AsyncSession = Depends(get_async_db),):
 
     result = await db.execute(select(CarModel).filter(CarModel.id == car_id))
     car = result.scalars().first()
@@ -176,9 +187,9 @@ async def get_compatible_parts(car_id: int, paginate: paginate_dep, db: AsyncSes
     if not car:
         raise HTTPException(status_code=404, detail="Car not found", )
 
-    offset = (paginate.page - 1) * paginate.per_page
-    result = await db.execute(select(PartModel).filter(PartModel.cars.any(id=car_id)).
-                              limit(int(paginate.per_page)).offset(offset))
+    # offset = (paginate.page - 1) * paginate.per_page
+    result = await db.execute(select(PartModel).filter(PartModel.cars.any(id=car_id)))
+
     parts = result.unique().scalars().all()
     dict_part = [await object_as_dict(part) for part in parts]
     return dict_part
