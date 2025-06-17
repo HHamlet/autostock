@@ -24,9 +24,9 @@ async def get_part_by_name(name: str, paginate: paginate_dep, db: AsyncSession =
     return dict_part
 
 
-async def get_part_by_pn(part_n: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+async def get_part_by_pn(part_pn: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
     offset = (paginate.page - 1) * paginate.per_page
-    result = await db.execute(select(PartModel).filter(PartModel.name == part_n).
+    result = await db.execute(select(PartModel).filter(PartModel.part_number == part_pn).
                               limit(int(paginate.per_page)).offset(offset))
 
     parts = result.unique().scalars().all()
@@ -37,9 +37,9 @@ async def get_part_by_pn(part_n: str, paginate: paginate_dep, db: AsyncSession =
 
 async def get_part_by_m_pn(m_part_n: str, db: AsyncSession = Depends(get_async_db),):
 
-    result = await db.execute(select(PartModel).filter(PartModel.name == m_part_n))
+    result = await db.execute(select(PartModel).filter(PartModel.manufacturer_part_number == m_part_n))
 
-    parts = result.scalars().all()
+    parts = result.unique().scalars().all()
 
     return parts
 
