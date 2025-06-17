@@ -73,7 +73,7 @@
     </div>
 
     <!-- Pagination Controls -->
-    {% if total > limit %}
+    {% if total is defined and limit is defined and total > limit %}
     <nav class="mt-4">
         <ul class="pagination justify-content-center">
             {% set pages = (total // limit) + (1 if total % limit > 0 else 0) %}
