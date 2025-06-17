@@ -47,7 +47,7 @@ async def login_access_token_form(request: Request, db: AsyncSession = Depends(g
 
     token = await auth.login_access_token(db=db, form_data=form_data)
     response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(key="access_token", value=f"Bearer {token['access_token']}", httponly=True, secure=False)
+    response.set_cookie(key="access_token", value=token['access_token'], httponly=True, secure=False)
     return response
 
 
