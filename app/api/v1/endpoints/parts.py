@@ -24,7 +24,7 @@ async def read_parts(paginate: Paginate = Depends(pagination_param), db: AsyncSe
         parts = await part.get_part_by_name(paginate=paginate, name=name, db=db)
         return parts
     if part_number:
-        parts = await part.get_part_by_pn(paginate=paginate, part_n=part_number,  db=db)
+        parts = await part.get_part_by_pn(paginate=paginate, part_pn=part_number,  db=db)
         return parts
     if manufacturer_part_number:
         parts = await part.get_part_by_m_pn(m_part_n=manufacturer_part_number, db=db)
@@ -34,18 +34,25 @@ async def read_parts(paginate: Paginate = Depends(pagination_param), db: AsyncSe
 @html_router.get("/", response_class=HTMLResponse)
 async def list_parts_page(request: Request, paginate: Paginate = Depends(pagination_param),
                           db: AsyncSession = Depends(get_async_db),
+                          current_user: UserModel = Depends(get_current_user),
                           name: Optional[str] = None, part_number: Optional[str] = None,
                           manufacturer_part_number: Optional[str] = None, ):
     parts = []
     if name:
-        parts = await part.get_part_by_name(paginate=None, name=name, db=db)
-        return templates.TemplateResponse("parts/list.html", {"request": request, "parts": parts, })
+        parts = await part.get_part_by_name(paginate=paginate, name=name, db=db)
+        return templates.TemplateResponse("parts/list.html", {"request": request,
+                                                              "parts": parts,
+                                                              "current_user": current_user,})
     elif part_number:
-        parts = await part.get_part_by_pn(paginate=None, part_n=part_number, db=db)
-        return templates.TemplateResponse("parts/list.html", {"request": request, "parts": parts, })
+        parts = await part.get_part_by_pn(paginate=paginate, part_pn=part_number, db=db)
+        return templates.TemplateResponse("parts/list.html", {"request": request,
+                                                              "parts": parts,
+                                                              "current_user": current_user,})
     elif manufacturer_part_number:
         parts = await part.get_part_by_m_pn(m_part_n=manufacturer_part_number, db=db)
-        return templates.TemplateResponse("parts/list.html", {"request": request, "parts": parts, })
+        return templates.TemplateResponse("parts/list.html", {"request": request,
+                                                              "parts": parts,
+                                                              "current_user": current_user,})
     else:
         result = await part.get_all_parts(paginate=paginate, db=db)
 
@@ -53,7 +60,8 @@ async def list_parts_page(request: Request, paginate: Paginate = Depends(paginat
                                                               "parts": result["items"],
                                                               "page": result["page"],
                                                               "limit": result["per_page"],
-                                                              "total": result["total"], })
+                                                              "total": result["total"],
+                                                              "current_user": current_user, })
 
 
 @router.post("/", response_model=Part, status_code=status.HTTP_201_CREATED)
@@ -114,6 +122,7 @@ async def part_edit_page(request: Request, part_id: int,
         raise HTTPException(status_code=404, detail="Part not found")
 
     return templates.TemplateResponse("parts/form.html", {"request": request,
+                                                          "part_id": part_id,
                                                           "part": part_data,
                                                           "current_user": current_user})
 
