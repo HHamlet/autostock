@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if warehouse_id else 'Add' }} Warehouse - Auto Parts Inventory{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/warehouses">Warehouses</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ 'Edit' if warehouse_id else 'Add' }} Warehouse</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{{ 'edit' if warehouse_id else 'plus' }} me-2"></i>
+                        {{ 'Edit' if warehouse_id else 'Add New' }} Warehouse
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="warehouse-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Warehouse Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required 
+                                        placeholder="Enter warehouse name...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="code" class="form-label">Warehouse Code</label>
+                                    <input type="text" class="form-control" id="code" name="code" 
+                                        placeholder="e.g., WH001, MAIN, etc.">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2" 
+                                placeholder="Brief description of the warehouse..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Street Address</label>
+                                    <input type="text" class="form-control" id="address" name="address" 
+                                        placeholder="Street address...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="city" name="city" 
+                                        placeholder="City...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="state" class="form-label">State/Province</label>
+                                    <input type="text" class="form-control" id="state" name="state" 
+                                        placeholder="State...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="zip_code" class="form-label">ZIP/Postal Code</label>
+                                    <input type="text" class="form-control" id="zip_code" name="zip_code" 
+                                        placeholder="ZIP code...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="country" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="country" name="country" 
+                                        placeholder="Country...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="manager_name" class="form-label">Manager Name</label>
+                                    <input type="text" class="form-control" id="manager_name" name="manager_name" 
+                                        placeholder="Warehouse manager name...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="manager_phone" class="form-label">Manager Phone</label>
+                                    <input type="tel" class="form-control" id="manager_phone" name="manager_phone" 
+                                        placeholder="Manager phone number...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="manager_email" class="form-label">Manager Email</label>
+                                    <input type="email" class="form-control" id="manager_email" name="manager_email" 
+                                        placeholder="Manager email address...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="capacity" class="form-label">Storage Capacity</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="capacity" name="capacity" min="0" 
+                                            placeholder="Maximum storage capacity...">
+                                        <span class="input-group-text">units</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="operating_hours" class="form-label">Operating Hours</label>
+                                    <input type="text" class="form-control" id="operating_hours" name="operating_hours" 
+                                        placeholder="e.g., Mon-Fri 8AM-6PM">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="is_active" class="form-label">Status</label>
+                                    <select class="form-select" id="is_active" name="is_active">
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                placeholder="Additional notes about the warehouse..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/warehouses" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>{{ 'Update' if warehouse_id else 'Create' }} Warehouse
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Warehouse Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <ul class="mb-0 ps-3">
+                            <li><strong>Name</strong> is required and should be unique</li>
+                            <li><strong>Code</strong> helps with quick identification</li>
+                            <li><strong>Address</strong> information is important for logistics</li>
+                            <li><strong>Manager</strong> details for contact purposes</li>
+                            <li><strong>Capacity</strong> helps track utilization</li>
+                            <li><strong>Operating Hours</strong> for scheduling</li>
+                        </ul>
+                    </small>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Best Practices</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <div class="mb-2">
+                            <strong>Naming:</strong> Use descriptive names like "Main Distribution Center" or "Regional Warehouse North"
+                        </div>
+                        <div class="mb-2">
+                            <strong>Capacity:</strong> Set realistic capacity limits to track utilization effectively
+                        </div>
+                        <div class="mb-2">
+                            <strong>Contact Info:</strong> Keep manager information up to date for operations
+                        </div>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentWarehouseId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're editing an existing warehouse
+    const path = window.location.pathname;
+    const editMatch = path.match(/\/warehouses\/(\d+)\/edit/);
+    
+    if (editMatch) {
+        currentWarehouseId = parseInt(editMatch[1]);
+        loadWarehouseData(currentWarehouseId);
+    }
+    
+    // Form submission handler
+    document.getElementById('warehouse-form').addEventListener('submit', handleFormSubmit);
+});
+
+async function loadWarehouseData(warehouseId) {
+    try {
+        const response = await fetch(`/api/v1/warehouses/${warehouseId}`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            const warehouse = await response.json();
+            populateForm(warehouse);
+        } else {
+            throw new Error('Failed to load warehouse data');
+        }
+    } catch (error) {
+        console.error('Error loading warehouse data:', error);
+        showAlert('danger', 'Failed to load warehouse data');
+    }
+}
+
+function populateForm(warehouse) {
+    document.getElementById('name').value = warehouse.name || '';
+    document.getElementById('code').value = warehouse.code || '';
+    document.getElementById('description').value = warehouse.description || '';
+    document.getElementById('address').value = warehouse.address || '';
+    document.getElementById('city').value = warehouse.city || '';
+    document.getElementById('state').value = warehouse.state || '';
+    document.getElementById('zip_code').value = warehouse.zip_code || '';
+    document.getElementById('country').value = warehouse.country || '';
+    document.getElementById('manager_name').value = warehouse.manager_name || '';
+    document.getElementById('manager_phone').value = warehouse.manager_phone || '';
+    document.getElementById('manager_email').value = warehouse.manager_email || '';
+    document.getElementById('capacity').value = warehouse.capacity || '';
+    document.getElementById('operating_hours').value = warehouse.operating_hours || '';
+    document.getElementById('is_active').value = warehouse.is_active ? 'true' : 'false';
+    document.getElementById('notes').value = warehouse.notes || '';
+}
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const warehouseData = {};
+    
+    // Convert form data to object
+    for (let [key, value] of formData.entries()) {
+        if (value.trim()) {
+            if (key === 'capacity') {
+                warehouseData[key] = parseInt(value) || null;
+            } else if (key === 'is_active') {
+                warehouseData[key] = value === 'true';
+            } else {
+                warehouseData[key] = value.trim();
+            }
+        }
+    }
+    
+    try {
+        const url = currentWarehouseId ? `/api/v1/warehouses/${currentWarehouseId}` : '/api/v1/warehouses';
+        const method = currentWarehouseId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify(warehouseData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showAlert('success', `Warehouse ${currentWarehouseId ? 'updated' : 'created'} successfully`);
+            window.location.href = `/warehouses/${result.id}`;
+        } else {
+            const error = await response.json();
+            showAlert('danger', error.detail || `Failed to ${currentWarehouseId ? 'update' : 'create'} warehouse`);
+        }
+    } catch (error) {
+        console.error('Error submitting form:', error);
+        showAlert('danger', 'An error occurred while saving the warehouse');
+    }
+}
+</script>
+{% endblock %}
