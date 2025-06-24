@@ -25,26 +25,92 @@
         </div>
     </div>
 
-    <form id="part-form">
+    <form id="part-form" method="post">
         <div class="card mb-4">
             <div class="card-body">
+                <!-- Name -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Part Name</label>
                     <input type="text" class="form-control" id="name" name="name" required value="{{ part.name if part else '' }}">
                 </div>
+
+                <!-- Part Number -->
                 <div class="mb-3">
                     <label for="part_number" class="form-label">Part Number</label>
                     <input type="text" class="form-control" id="part_number" name="part_number" required value="{{ part.part_number if part else '' }}">
                 </div>
+
+                <!-- Manufacturer Part Number -->
                 <div class="mb-3">
                     <label for="manufacturer_part_number" class="form-label">Manufacturer Part Number</label>
                     <input type="text" class="form-control" id="manufacturer_part_number" name="manufacturer_part_number" value="{{ part.manufacturer_part_number if part else '' }}">
                 </div>
+
+                <!-- Price -->
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" required value="{{ part.price if part else '' }}">
+                </div>
+
+                <!-- Quantity in Stock -->
+                <div class="mb-3">
+                    <label for="qty_in_stock" class="form-label">Quantity In Stock</label>
+                    <input type="number" class="form-control" id="qty_in_stock" name="qty_in_stock" required value="{{ part.qty_in_stock if part else '' }}">
+                </div>
+
+                <!-- Description -->
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
                     <textarea class="form-control" id="description" name="description" rows="3">{{ part.description if part else '' }}</textarea>
                 </div>
+
+                <!-- Image URL -->
+                <div class="mb-3">
+                    <label for="image_url" class="form-label">Image URL</label>
+                    <input type="text" class="form-control" id="image_url" name="image_url" value="{{ part.image_url if part else '' }}">
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label for="category_name" class="form-label">Category</label>
+                    <input type="text" class="form-control" id="category_name" name="category_name" value="{{ part.category.name if part and part.category else '' }}">
+                </div>
+
+                <!-- Manufacturer -->
+                <div class="mb-3">
+                    <label for="manufacturer_id" class="form-label">Manufacturers</label>
+                    <select class="form-control" id="manufacturer_id" name="manufacturers_id" multiple>
+                        {% for m in manufacturers %}
+                            <option value="{{ m.id }}"
+                                {% if part and m.id in part.manufacturers | map(attribute='id') | list %}selected{% endif %}>
+                                {{ m.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Compatible Cars -->
+                <div class="mb-3">
+                    <label for="car_id" class="form-label">Compatible Cars</label>
+                    <select class="form-control" id="car_id" name="cars_id" multiple>
+                        {% for c in cars %}
+                            <option value="{{ c.id }}"
+                                {% if part and c.id in part.cars | map(attribute='id') | list %}selected{% endif %}>
+                                {{ c.brand }} {{ c.model }} ({{ c.year }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <!-- Warehouse -->
+                <div class="mb-3">
+                    <label for="warehouse_id" class="form-label">Warehouse ID</label>
+                    <input type="number" class="form-control" id="warehouse_id" name="warehouse_id" required value="{{ part.warehouse_id if part else '' }}">
+                </div>
             </div>
+
+            <!-- Footer Buttons -->
             <div class="card-footer text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save me-1"></i>
@@ -64,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const formData = new FormData(form);
         const partId = "{{ part_id or '' }}";
-        const url = partId ? `/parts/${partId}/edit` : '/parts/new';
+        const url = partId ? `/parts/${partId}/edit` : '/parts/add_new';
 
         const response = await fetch(url, {
             method: "POST",
@@ -79,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    console.log("Current user: {{ current_user.username }}");
+    console.log("Current user: {% if current_user %}{{ current_user.username }}{% else %}Guest{% endif %}");
 });
 </script>
 {% endblock %}
