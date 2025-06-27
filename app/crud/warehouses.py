@@ -4,8 +4,7 @@ from sqlalchemy import select, update, insert, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_active_admin
-from app.models import WarehouseModel, UserModel, PartModel
-from app.models.warehouse import warehouse_part
+from app.models import WarehouseModel, UserModel, PartModel, WarehousePartModel
 from app.schemas.pagination import Paginate, pagination_param, object_as_dict
 from app.schemas.warehouse import WarehouseCreate, WarehouseUpdate, WarehousePartCreate
 
@@ -14,7 +13,7 @@ paginate_dep = Annotated[Paginate, Depends(pagination_param)]
 
 async def get_warehouses(paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
     offset = (paginate.page - 1) * paginate.per_page
-    result = await db.execute(select(warehouse_part).offset(paginate.per_page).limit(offset))
+    result = await db.execute(select(WarehouseModel).limit(paginate.per_page).offset(offset))
     warehouses = result.scalars().all()
     dict_ware = [await object_as_dict(part) for part in warehouses]
     return dict_ware
@@ -38,15 +37,15 @@ async def create_warehouse(warehouse_in: WarehouseCreate, db: AsyncSession = Dep
     return warehouse
 
 
-async def get_warehouse(warehouse_id: int, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+async def get_warehouse_parts(warehouse_id: int, paginate: paginate_dep, db: AsyncSession):
     offset = (paginate.page - 1) * paginate.per_page
-    result = await db.execute(select(warehouse_part).filter(warehouse_part.warehouse_id == warehouse_id).
-                              offset(paginate.per_page).limit(offset))
-    warehouse = result.scalars().all()
-    if not warehouse:
-        raise HTTPException(status_code=404, detail="Warehouse not found", )
-    dict_ware = [await object_as_dict(part) for part in warehouse]
-    return dict_ware
+    stmt = (select(WarehousePartModel).filter(WarehousePartModel.warehouse_id == warehouse_id)
+            .limit(paginate.per_page).offset(offset))
+    result = await db.execute(stmt)
+    parts = result.scalars().all()
+
+    dict_parts = [await object_as_dict(part) for part in parts]
+    return dict_parts
 
 
 async def update_warehouse(warehouse_id: int, warehouse_in: WarehouseUpdate,
@@ -77,7 +76,7 @@ async def delete_warehouse(warehouse_id: int, db: AsyncSession = Depends(get_asy
     if not warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found", )
 
-    result_wp = await db.execute(select(warehouse_part).filter(warehouse_part.warehouse_id == warehouse_id))
+    result_wp = await db.execute(select(WarehousePartModel).filter(WarehousePartModel.warehouse_id == warehouse_id))
     warehouse_wp = result_wp.scalars().first()
     if warehouse_wp:
         raise HTTPException(status_code=400,
@@ -101,19 +100,19 @@ async def add_part_to_warehouse(warehouse_id: int, part_data: WarehousePartCreat
         if not part:
             raise HTTPException(status_code=404, detail="Part not found")
 
-        existing_association = await db.scalar(select(warehouse_part).where(
-                warehouse_part.c.warehouse_id == warehouse_id,
-                warehouse_part.c.part_id == part_data.part_id))
+        existing_association = await db.scalar(select(WarehousePartModel).where(
+                WarehousePartModel.warehouse_id == warehouse_id,
+                WarehousePartModel.part_id == part_data.part_id))
 
         if existing_association:
-            await db.execute(update(warehouse_part).
-                             where(warehouse_part.c.warehouse_id == warehouse_id,
-                                   warehouse_part.c.part_id == part_data.part_id,).
-                             values(quantity=warehouse_part.c.quantity + part_data.quantity))
+            await db.execute(update(WarehousePartModel).
+                             where(WarehousePartModel.warehouse_id == warehouse_id,
+                                   WarehousePartModel.part_id == part_data.part_id,).
+                             values(quantity=WarehousePartModel.quantity + part_data.quantity))
         else:
-            await db.execute(insert(warehouse_part).values(warehouse_id=warehouse_id,
-                                                           part_id=part_data.part_id,
-                                                           quantity=part_data.quantity,))
+            await db.execute(insert(WarehousePartModel).values(warehouse_id=warehouse_id,
+                                                               part_id=part_data.part_id,
+                                                               quantity=part_data.quantity,))
 
         await db.execute(update(PartModel).where(PartModel.id == part_data.part_id).
                          values(qty_in_stock=PartModel.qty_in_stock + part_data.quantity))
@@ -148,9 +147,9 @@ async def decrease_part_quantity_in_warehouse(warehouse_id: int, part_data: Ware
         if not part:
             raise HTTPException(status_code=404, detail="Part not found")
 
-        existing_association = await db.scalar(select(warehouse_part).
-                                               where(warehouse_part.c.warehouse_id == warehouse_id,
-                                                     warehouse_part.c.part_id == part_data.part_id,))
+        existing_association = await db.scalar(select(WarehousePartModel).
+                                               where(WarehousePartModel.warehouse_id == warehouse_id,
+                                                     WarehousePartModel.part_id == part_data.part_id,))
 
         if not existing_association:
             raise HTTPException(status_code=404, detail="Part not found in warehouse")
@@ -159,8 +158,8 @@ async def decrease_part_quantity_in_warehouse(warehouse_id: int, part_data: Ware
         if part_data.quantity > current_qty:
             raise HTTPException(status_code=400, detail="Cannot decrease below zero")
 
-        await db.execute(update(warehouse_part).where(warehouse_part.c.warehouse_id == warehouse_id,
-                                                      warehouse_part.c.part_id == part_data.part_id,).
+        await db.execute(update(WarehousePartModel).where(WarehousePartModel.warehouse_id == warehouse_id,
+                                                          WarehousePartModel.part_id == part_data.part_id,).
                          values(quantity=current_qty - part_data.quantity))
 
         await db.execute(update(PartModel).where(PartModel.id == part_data.part_id)
@@ -192,8 +191,8 @@ async def delete_part_from_warehouse(warehouse_id: int, part_id: int, db: AsyncS
             raise HTTPException(status_code=404, detail="Part not found")
 
         existing_association = await db.scalar(
-            select(warehouse_part).where(warehouse_part.c.warehouse_id == warehouse_id,
-                                         warehouse_part.c.part_id == part_id,))
+            select(WarehousePartModel).where(WarehousePartModel.warehouse_id == warehouse_id,
+                                             WarehousePartModel.part_id == part_id,))
 
         if not existing_association:
             raise HTTPException(status_code=404, detail="Part not found in warehouse")
@@ -201,8 +200,8 @@ async def delete_part_from_warehouse(warehouse_id: int, part_id: int, db: AsyncS
         quantity_to_remove = existing_association.quantity
 
         await db.execute(
-            delete(warehouse_part).where(warehouse_part.c.warehouse_id == warehouse_id,
-                                         warehouse_part.c.part_id == part_id))
+            delete(WarehousePartModel).where(WarehousePartModel.warehouse_id == warehouse_id,
+                                             WarehousePartModel.part_id == part_id))
 
         await db.execute(update(PartModel).where(PartModel.id == part_id).
                          values(qty_in_stock=PartModel.qty_in_stock - quantity_to_remove))
