@@ -7,7 +7,7 @@ from app.api.deps import get_async_db, get_current_active_admin, get_current_use
 from app.models.user import UserModel
 from app.schemas.part import Part, PartCreate, PartUpdate, PartWithRelations
 from app.schemas.pagination import Paginate, pagination_param
-from app.crud import part
+from app.crud import part, manufacturer, car
 
 
 router = APIRouter()
@@ -71,9 +71,17 @@ async def part_crate(part_in: PartCreate, db: AsyncSession = Depends(get_async_d
 
 
 @html_router.get("/add_new", response_class=HTMLResponse)
-async def part_create_page(request: Request, current_user: UserModel = Depends(get_current_user)):
+async def part_create_page(request: Request, db: AsyncSession = Depends(get_async_db),
+                           current_user: UserModel = Depends(get_current_user)):
+
+    manufacturers = await manufacturer.get_all_manufacturers(db=db)
+    cars = await car.get_all_cars(db=db)
+
     return templates.TemplateResponse("parts/form.html", {"request": request,
                                                           "part": None,
+                                                          "part_id": None,
+                                                          "manufacturers": manufacturers,
+                                                          "cars": cars,
                                                           "current_user": current_user})
 
 
@@ -118,12 +126,16 @@ async def part_edit_page(request: Request, part_id: int,
                          db: AsyncSession = Depends(get_async_db),
                          current_user: UserModel = Depends(get_current_user)):
     part_data = await part.get_part_by_id(part_id, db=db)
+    manufacturers = await manufacturer.get_all_manufacturers(db=db)
+    cars = await car.get_all_cars(db=db)
     if not part_data:
         raise HTTPException(status_code=404, detail="Part not found")
 
     return templates.TemplateResponse("parts/form.html", {"request": request,
                                                           "part_id": part_id,
                                                           "part": part_data,
+                                                          "manufacturers": manufacturers,
+                                                          "cars": cars,
                                                           "current_user": current_user})
 
 
@@ -185,9 +197,9 @@ async def get_compatible_parts(car_id: int, db: AsyncSession = Depends(get_async
 
 @html_router.get("/{part_id}", response_class=HTMLResponse)
 async def part_detail_page(request: Request, part_id: int,
-                           db: AsyncSession = Depends(get_async_db)):
+                           db: AsyncSession = Depends(get_async_db),
+                           current_user: UserModel = Depends(get_current_user)):
     part_model = await part.get_part_by_id(part_id=part_id, db=db)
-    # part_data = await object_to_dict(part_model)
 
     if not part_model:
         raise HTTPException(status_code=404, detail="Part not found")
@@ -195,4 +207,4 @@ async def part_detail_page(request: Request, part_id: int,
 
     return templates.TemplateResponse("parts/detail.html", {"request": request,
                                                             "part": part_model,
-                                                            })
+                                                            "current_user": current_user, })
