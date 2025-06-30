@@ -22,9 +22,9 @@ class PartModel(BaseModel):
     category: Mapped["CategoryModel"] = relationship(back_populates="parts", lazy="joined")
     manufacturers: Mapped[list["ManufacturerModel"]] = relationship(secondary="part_manufacturer", back_populates="parts", lazy="joined")
     cars: Mapped[list["CarModel"]] = relationship(secondary="part_car", back_populates="parts", lazy="joined")
-    warehouses: Mapped[list["WarehouseModel"]] = relationship(back_populates="parts", lazy="joined")
-
     order_items: Mapped[list["OrderItemModel"]] = relationship("OrderItemModel", back_populates="part", lazy="select")
+
+    warehouse_parts: Mapped[list["WarehousePartModel"]] = relationship("WarehousePartModel", back_populates="part")
 
     def __repr__(self):
         return (f"PartModel({self.name}, {self.part_number}, Category: {self.category}, "
