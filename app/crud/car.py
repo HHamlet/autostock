@@ -6,6 +6,11 @@ from app.models import CarModel, UserModel
 from app.schemas.car import CarCreate
 
 
+async def get_all_cars(db: AsyncSession):
+    result = await db.execute(select(CarModel))
+    return result.unique().scalars().all()
+
+
 async def create_car(car_in: CarCreate, db: AsyncSession = Depends(get_async_db),
                      current_user: UserModel = Depends(get_current_active_admin),):
 
