@@ -10,13 +10,14 @@ from app.core.config import settings
 from app.api.deps import get_async_db
 from app.api.v1.endpoints.user import router as user_router
 from app.api.v1.endpoints.auth import router as auth_router
+from app.frontends.auth import html_router as auth_html_router
 from app.api.v1.endpoints.car import router as car_router
 from app.api.v1.endpoints.categories import router as cat_router
 from app.api.v1.endpoints.manufacturers import router as man_router
 from app.api.v1.endpoints.warehouses import router as ware_router
-from app.api.v1.endpoints.warehouses import html_router as html_ware_router
+from app.frontends.warehouses import html_router as html_ware_router
 from app.api.v1.endpoints.parts import router as part_router
-from app.api.v1.endpoints.parts import html_router as part_html_router
+from app.frontends.parts import html_router as part_html_router
 from app.core.security import verify_access_token
 from app.models import UserModel
 
@@ -37,6 +38,7 @@ app.include_router(man_router, prefix="/api/v1/manufacturers", tags=["manufactur
 app.include_router(ware_router, prefix="/api/v1/warehouses", tags=["warehouse"])
 app.include_router(part_router, prefix="/api/v1/parts", tags=["parts"])
 
+app.include_router(auth_html_router, prefix="/auth", tags=["auth-html"])
 app.include_router(part_html_router, prefix="/parts", tags=["parts-html"])
 app.include_router(html_ware_router, prefix="/warehouses", tags=["warehouse"])
 
