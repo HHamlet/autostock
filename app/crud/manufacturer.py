@@ -11,6 +11,11 @@ from app.schemas.pagination import Paginate, pagination_param, object_as_dict
 paginate_dep = Annotated[Paginate, Depends(pagination_param)]
 
 
+async def get_all_manufacturers(db: AsyncSession):
+    result = await db.execute(select(ManufacturerModel))
+    return result.unique().scalars().all()
+
+
 async def read_manufacturers(paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
 
     offset = (paginate.page - 1) * paginate.per_page
