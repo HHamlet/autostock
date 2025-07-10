@@ -13,7 +13,7 @@ async def get_categories_by_name(category_name: str, db: AsyncSession = Depends(
     result = await db.execute(select(CategoryModel).options(selectinload(CategoryModel.subcategories)).
                               filter(CategoryModel.name == category_name))
     categories = result.scalars().first()
-    return categories
+    return categories.id
 
 
 async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_async_db), ):
