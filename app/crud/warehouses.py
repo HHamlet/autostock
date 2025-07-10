@@ -1,8 +1,10 @@
 from typing import Annotated
 from fastapi import Depends, HTTPException, Response, status
-from sqlalchemy import select, update, insert, delete
+from sqlalchemy import select, update, insert, delete, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload, selectinload
+
 from app.api.deps import get_async_db, get_current_active_admin
 from app.models import WarehouseModel, UserModel, PartModel, WarehousePartModel
 from app.schemas.pagination import Paginate, pagination_param, object_as_dict
@@ -17,6 +19,11 @@ async def get_warehouses(paginate: paginate_dep, db: AsyncSession = Depends(get_
     warehouses = result.scalars().all()
     dict_ware = [await object_as_dict(part) for part in warehouses]
     return dict_ware
+
+
+async def get_all_warehouses(db: AsyncSession):
+    result = await db.execute(select(WarehouseModel))
+    return result.scalars().all()
 
 
 async def create_warehouse(warehouse_in: WarehouseCreate, db: AsyncSession = Depends(get_async_db),
@@ -39,13 +46,30 @@ async def create_warehouse(warehouse_in: WarehouseCreate, db: AsyncSession = Dep
 
 async def get_warehouse_parts(warehouse_id: int, paginate: paginate_dep, db: AsyncSession):
     offset = (paginate.page - 1) * paginate.per_page
-    stmt = (select(WarehousePartModel).filter(WarehousePartModel.warehouse_id == warehouse_id)
+    stmt = (select(WarehousePartModel).options(
+        selectinload(WarehousePartModel.part)).where(WarehousePartModel.warehouse_id == warehouse_id)
             .limit(paginate.per_page).offset(offset))
     result = await db.execute(stmt)
     parts = result.scalars().all()
 
-    dict_parts = [await object_as_dict(part) for part in parts]
-    return dict_parts
+    dict_parts = []
+    for wp in parts:
+        part = wp.part
+        if not part:
+            continue
+        dict_parts.append({"id": part.id,
+                           "name": part.name,
+                           "part_number": part.part_number,
+                           "quantity": wp.quantity, })
+
+    total_stmt = (select(func.count()).select_from(WarehousePartModel)
+                  .filter(WarehousePartModel.warehouse_id == warehouse_id))
+    total = await db.scalar(total_stmt)
+
+    return {"items": dict_parts,
+            "total": total,
+            "page": paginate.page,
+            "per_page": paginate.per_page, }
 
 
 async def update_warehouse(warehouse_id: int, warehouse_in: WarehouseUpdate,
@@ -96,7 +120,11 @@ async def add_part_to_warehouse(warehouse_id: int, part_data: WarehousePartCreat
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
 
-        part = await db.scalar(select(PartModel).filter(PartModel.id == part_data.part_id).with_for_update())
+        part = await db.scalar(select(PartModel).options(noload(PartModel.category),
+                                                         noload(PartModel.manufacturers),
+                                                         noload(PartModel.cars))
+                               .where(PartModel.id == part_data.part_id)
+                               .with_for_update(nowait=True))
         if not part:
             raise HTTPException(status_code=404, detail="Part not found")
 
@@ -114,8 +142,8 @@ async def add_part_to_warehouse(warehouse_id: int, part_data: WarehousePartCreat
                                                                part_id=part_data.part_id,
                                                                quantity=part_data.quantity,))
 
-        await db.execute(update(PartModel).where(PartModel.id == part_data.part_id).
-                         values(qty_in_stock=PartModel.qty_in_stock + part_data.quantity))
+        total_quantity = await recalculate_part_stock(part_id=part_data.part_id, db=db)
+        await db.execute(update(PartModel).where(PartModel.id == part_data.part_id).values(qty_in_stock=total_quantity))
 
         await db.commit()
 
@@ -125,7 +153,7 @@ async def add_part_to_warehouse(warehouse_id: int, part_data: WarehousePartCreat
             "part_id": part_data.part_id,
             "warehouse_id": warehouse_id,
             "current_quantity": part_data.quantity,
-            "total_in_stock": (part.qty_in_stock or 0) + part_data.quantity
+            "total_in_stock": total_quantity
         }
 
     except SQLAlchemyError as e:
@@ -158,12 +186,13 @@ async def decrease_part_quantity_in_warehouse(warehouse_id: int, part_data: Ware
         if part_data.quantity > current_qty:
             raise HTTPException(status_code=400, detail="Cannot decrease below zero")
 
-        await db.execute(update(WarehousePartModel).where(WarehousePartModel.warehouse_id == warehouse_id,
-                                                          WarehousePartModel.part_id == part_data.part_id,).
+        await db.execute(update(WarehousePartModel).
+                         where(WarehousePartModel.warehouse_id == warehouse_id,
+                               WarehousePartModel.part_id == part_data.part_id,).
                          values(quantity=current_qty - part_data.quantity))
 
-        await db.execute(update(PartModel).where(PartModel.id == part_data.part_id)
-                         .values(qty_in_stock=PartModel.qty_in_stock - part_data.quantity))
+        total_quantity = await recalculate_part_stock(part_id=part_data.part_id, db=db)
+        await db.execute(update(PartModel).where(PartModel.id == part_data.part_id).values(qty_in_stock=total_quantity))
 
         await db.commit()
 
@@ -203,8 +232,8 @@ async def delete_part_from_warehouse(warehouse_id: int, part_id: int, db: AsyncS
             delete(WarehousePartModel).where(WarehousePartModel.warehouse_id == warehouse_id,
                                              WarehousePartModel.part_id == part_id))
 
-        await db.execute(update(PartModel).where(PartModel.id == part_id).
-                         values(qty_in_stock=PartModel.qty_in_stock - quantity_to_remove))
+        total_quantity = await recalculate_part_stock(part_id=part_id, db=db)
+        await db.execute(update(PartModel).where(PartModel.id == part_id).values(qty_in_stock=total_quantity))
 
         await db.commit()
 
@@ -216,3 +245,12 @@ async def delete_part_from_warehouse(warehouse_id: int, part_id: int, db: AsyncS
     except SQLAlchemyError as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=f"Database operation failed: {str(e)}")
+
+
+async def recalculate_part_stock(part_id: int, db: AsyncSession):
+    total_quantity_stmt = (select(func.coalesce(func.sum(WarehousePartModel.quantity), 0)).
+                           where(WarehousePartModel.part_id == part_id))
+
+    total_quantity = await db.scalar(total_quantity_stmt)
+
+    return total_quantity
