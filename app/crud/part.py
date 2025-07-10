@@ -89,7 +89,7 @@ async def create_part(part_in: PartCreate, db: AsyncSession = Depends(get_async_
                      part_number=part_in.part_number,
                      manufacturer_part_number=part_in.manufacturer_part_number,
                      price=part_in.price,
-                     qty_in_stock=part_in.qty_in_stock,
+                     qty_in_stock=0,
                      category_id=category,
                      description=part_in.description, )
 
@@ -113,7 +113,8 @@ async def create_part(part_in: PartCreate, db: AsyncSession = Depends(get_async_
 
     if part_in.warehouse_id:
         part_d = WarehousePartCreate(part_id=part.id, quantity=part_in.qty_in_stock)
-        await warehouses.add_part_to_warehouse(warehouse_id=part_in.warehouse_id, part_data=part_d)
+        await warehouses.add_part_to_warehouse(warehouse_id=part_in.warehouse_id, part_data=part_d,
+                                               db=db, current_user=current_user)
         await db.refresh(part)
     return part
 
