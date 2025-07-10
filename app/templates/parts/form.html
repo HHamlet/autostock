@@ -1,85 +1,91 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {{ 'Edit Part' if part_id else 'Add New Part' }} - Auto Parts Inventory
+    {% if add_to_warehouse %}
+        Add Part to Warehouse - Auto Parts Inventory
+    {% elif part_id %}
+        Edit Part - Auto Parts Inventory
+    {% else %}
+        Add New Part - Auto Parts Inventory
+    {% endif %}
 {% endblock %}
 
 {% block content %}
+{% set readonly = 'readonly' if add_to_warehouse else '' %}
+{% set disabled = 'disabled' if add_to_warehouse else '' %}
+
 <div class="container">
     <div class="row mb-4">
         <div class="col">
             <h1>
-                <i class="fas fa-{{ 'edit' if part_id else 'plus' }} me-2"></i>
-                {{ 'Edit Part' if part_id else 'Add New Part' }}
-            </h1>
-            <p class="text-muted">
-                Fill in the details below to {{ 'update' if part_id else 'create' }} a part.
-            </p>
-            <p class="text-muted small">
-                {% if current_user and current_user.username %}
-                    Logged in as: <strong>{{ current_user.username }}</strong>
+                <i class="fas fa-{{ 'plus' if add_to_warehouse else ('edit' if part_id else 'plus') }} me-2"></i>
+                {% if add_to_warehouse %}
+                    Add Part to Warehouse
+                {% elif part_id %}
+                    Edit Part
                 {% else %}
-                    Not logged in
+                    Add New Part
                 {% endif %}
-            </p>
+            </h1>
         </div>
     </div>
 
     <form id="part-form" method="post">
         <div class="card mb-4">
             <div class="card-body">
+
                 <!-- Name -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Part Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required value="{{ part.name if part else '' }}">
+                    <input type="text" class="form-control" id="name" name="name" value="{{ part.name if part else '' }}" {{ readonly }}>
                 </div>
 
                 <!-- Part Number -->
                 <div class="mb-3">
                     <label for="part_number" class="form-label">Part Number</label>
-                    <input type="text" class="form-control" id="part_number" name="part_number" required value="{{ part.part_number if part else '' }}">
+                    <input type="text" class="form-control" id="part_number" name="part_number" value="{{ part.part_number if part else '' }}" {{ readonly }}>
                 </div>
 
                 <!-- Manufacturer Part Number -->
                 <div class="mb-3">
                     <label for="manufacturer_part_number" class="form-label">Manufacturer Part Number</label>
-                    <input type="text" class="form-control" id="manufacturer_part_number" name="manufacturer_part_number" value="{{ part.manufacturer_part_number if part else '' }}">
+                    <input type="text" class="form-control" id="manufacturer_part_number" name="manufacturer_part_number" value="{{ part.manufacturer_part_number if part else '' }}" {{ readonly }}>
                 </div>
 
                 <!-- Price -->
                 <div class="mb-3">
                     <label for="price" class="form-label">Price</label>
-                    <input type="number" step="0.01" class="form-control" id="price" name="price" required value="{{ part.price if part else '' }}">
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ part.price if part else '' }}" {{ readonly }}>
                 </div>
 
-                <!-- Quantity in Stock -->
+                <!-- Quantity In Stock -->
                 <div class="mb-3">
                     <label for="qty_in_stock" class="form-label">Quantity In Stock</label>
-                    <input type="number" class="form-control" id="qty_in_stock" name="qty_in_stock" required value="{{ part.qty_in_stock if part else '' }}">
+                    <input type="number" class="form-control" id="qty_in_stock" name="qty_in_stock" value="{{ part.qty_in_stock if part else '' }}" {{ readonly }}>
                 </div>
 
                 <!-- Description -->
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="3">{{ part.description if part else '' }}</textarea>
+                    <textarea class="form-control" id="description" name="description" rows="3" {{ readonly }}>{{ part.description if part else '' }}</textarea>
                 </div>
 
                 <!-- Image URL -->
                 <div class="mb-3">
                     <label for="image_url" class="form-label">Image URL</label>
-                    <input type="text" class="form-control" id="image_url" name="image_url" value="{{ part.image_url if part else '' }}">
+                    <input type="text" class="form-control" id="image_url" name="image_url" value="{{ part.image_url if part else '' }}" {{ readonly }}>
                 </div>
 
                 <!-- Category -->
                 <div class="mb-3">
                     <label for="category_name" class="form-label">Category</label>
-                    <input type="text" class="form-control" id="category_name" name="category_name" value="{{ part.category.name if part and part.category else '' }}">
+                    <input type="text" class="form-control" id="category_name" name="category_name" value="{{ part.category.name if part and part.category else '' }}" {{ readonly }}>
                 </div>
 
-                <!-- Manufacturer -->
+                <!-- Manufacturers -->
                 <div class="mb-3">
                     <label for="manufacturer_id" class="form-label">Manufacturers</label>
-                    <select class="form-control" id="manufacturer_id" name="manufacturers_id" multiple>
+                    <select class="form-control" id="manufacturer_id" name="manufacturers_id" multiple {{ disabled }}>
                         {% for m in manufacturers %}
                             <option value="{{ m.id }}"
                                 {% if part and m.id in part.manufacturers | map(attribute='id') | list %}selected{% endif %}>
@@ -92,7 +98,7 @@
                 <!-- Compatible Cars -->
                 <div class="mb-3">
                     <label for="car_id" class="form-label">Compatible Cars</label>
-                    <select class="form-control" id="car_id" name="cars_id" multiple>
+                    <select class="form-control" id="car_id" name="cars_id" multiple {{ disabled }}>
                         {% for c in cars %}
                             <option value="{{ c.id }}"
                                 {% if part and c.id in part.cars | map(attribute='id') | list %}selected{% endif %}>
@@ -102,19 +108,36 @@
                     </select>
                 </div>
 
-
                 <!-- Warehouse -->
                 <div class="mb-3">
-                    <label for="warehouse_id" class="form-label">Warehouse ID</label>
-                    <input type="number" class="form-control" id="warehouse_id" name="warehouse_id" required value="{{ part.warehouse_id if part else '' }}">
+                <label for="warehouse_id" class="form-label">Select Warehouse</label>
+                    <select class="form-control" id="warehouse_id" name="warehouse_id" required>
+                    <option disabled selected value="">Choose warehouse</option>
+                        {% for w in warehouses %}
+                    <option value="{{ w.id }}">{{ w.name }} ({{ w.location }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
+
+                <!-- Quantity to Add -->
+                {% if add_to_warehouse %}
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">Quantity to Add</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                </div>
+                {% endif %}
             </div>
 
-            <!-- Footer Buttons -->
             <div class="card-footer text-end">
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save me-1"></i>
-                    {{ 'Update' if part_id else 'Create' }}
+                    {% if add_to_warehouse %}
+                        Add to Warehouse
+                    {% elif part_id %}
+                        Update
+                    {% else %}
+                        Create
+                    {% endif %}
                 </button>
                 <a href="/parts" class="btn btn-secondary">Cancel</a>
             </div>
@@ -130,7 +153,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const formData = new FormData(form);
         const partId = "{{ part_id or '' }}";
-        const url = partId ? `/parts/${partId}/edit` : '/parts/add_new';
+        const isAddToWarehouse = "{{ add_to_warehouse|default(false) }}" === "True";
+
+        const url = isAddToWarehouse
+            ? `/warehouses/add-part/${partId}`
+            : (partId ? `/parts/${partId}/edit` : '/parts/add_new');
 
         const response = await fetch(url, {
             method: "POST",
@@ -141,11 +168,9 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = response.url;
         } else {
             const text = await response.text();
-            alert("Failed to save part. " + text);
+            alert("Failed to submit form. " + text);
         }
     });
-
-    console.log("Current user: {% if current_user %}{{ current_user.username }}{% else %}Guest{% endif %}");
 });
 </script>
 {% endblock %}
