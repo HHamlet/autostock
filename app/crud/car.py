@@ -1,14 +1,59 @@
+from typing import Annotated
 from fastapi import Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_active_admin
 from app.models import CarModel, UserModel
 from app.schemas.car import CarCreate
+from app.schemas.pagination import Paginate, pagination_param, object_as_dict
+
+paginate_dep = Annotated[Paginate, Depends(pagination_param)]
 
 
-async def get_all_cars(db: AsyncSession):
+async def get_cars(paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+    offset = (paginate.page - 1) * paginate.per_page
+    total_result = await db.execute(select(func.count()).select_from(CarModel))
+    total = total_result.scalar()
+    result = await db.execute(select(CarModel).limit(paginate.per_page).offset(offset))
+    cars = result.unique().scalars().all()
+    dict_car = [await object_as_dict(car) for car in cars]
+
+    return {"cars": dict_car,
+            "total": total,
+            "page": paginate.page,
+            "per_page": paginate.per_page}
+
+
+async def get_all_cars(db: AsyncSession = Depends(get_async_db),):
     result = await db.execute(select(CarModel))
     return result.unique().scalars().all()
+
+
+async def get_car_by_id(car_id: int, db: AsyncSession = Depends(get_async_db),):
+    result = await db.execute(select(CarModel).where(CarModel.id == car_id))
+    car = result.scalars().first()
+    if not car:
+        return None
+    return await object_as_dict(car)
+
+
+async def get_car_by_name(name: str, paginate: paginate_dep, db: AsyncSession = Depends(get_async_db),):
+    offset = (paginate.page - 1) * paginate.per_page
+    query = select(CarModel).filter((CarModel.brand + CarModel.model).ilike(f"%{name}%"))
+
+    total_result = await db.execute(select(func.count()).select_from(query.subquery()))
+    total = total_result.scalar()
+
+    result = await db.execute(query.limit(paginate.per_page).offset(offset))
+    cars = result.unique().scalars().all()
+    dict_cars = [await object_as_dict(car) for car in cars]
+
+    return {
+        "cars": dict_cars,
+        "total": total,
+        "page": paginate.page,
+        "per_page": paginate.per_page
+    }
 
 
 async def create_car(car_in: CarCreate, db: AsyncSession = Depends(get_async_db),
@@ -18,8 +63,11 @@ async def create_car(car_in: CarCreate, db: AsyncSession = Depends(get_async_db)
             CarModel.brand == car_in.brand,
             CarModel.model == car_in.model,
             CarModel.year_start == car_in.year_start,
+            CarModel.year_end == car_in.year_end,
+            CarModel.engine_model == car_in.engine_model,
             CarModel.engine_type == car_in.engine_type,
-            CarModel.engine_model == car_in.engine_model
+            CarModel.engine_volume == car_in.engine_volume,
+            CarModel.body_type == car_in.body_type
         )
     )
     existing_car = result.scalars().first()
