@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Cars List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Cars</h2>
+        <a href="/cars/add_new" class="btn btn-success">+ Add New Car</a>
+    </div>
+
+    <!-- Search Form -->
+    <form method="get" class="mb-3 d-flex" action="/cars/list">
+        <input type="text" name="name" value="{{ request.query_params.get('name', '') }}" class="form-control me-2" placeholder="Search by brand or model">
+        <input type="hidden" name="per_page" value="{{ limit }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <!-- Cars Table -->
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Years</th>
+                <th>Engine</th>
+                <th>Body</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for car in cars.cars %}
+            <tr>
+                <td>{{ car.brand }}</td>
+                <td>{{ car.model }}</td>
+                <td>{{ car.year_start }}{% if car.year_end %} - {{ car.year_end }}{% endif %}</td>
+                <td>{{ car.engine_model }} ({{ car.engine_type }})</td>
+                <td>{{ car.body_type }}</td>
+                <td>
+                    <a href="/cars/{{ car.id }}" class="btn btn-info btn-sm">View</a>
+                    <a href="/cars/{{ car.id }}/edit" class="btn btn-warning btn-sm">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    {% set total_pages = (total // limit) + (1 if total % limit else 0) %}
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+
+            {# Previous #}
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page - 1 }}&per_page={{ limit }}{% if request.query_params.get('name') %}&name={{ request.query_params.get('name') }}{% endif %}">
+                    Previous
+                </a>
+            </li>
+
+            {# Numbered pages #}
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="?page={{ p }}&per_page={{ limit }}{% if request.query_params.get('name') %}&name={{ request.query_params.get('name') }}{% endif %}">
+                    {{ p }}
+                </a>
+            </li>
+            {% endfor %}
+
+            {# Next #}
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page + 1 }}&per_page={{ limit }}{% if request.query_params.get('name') %}&name={{ request.query_params.get('name') }}{% endif %}">
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

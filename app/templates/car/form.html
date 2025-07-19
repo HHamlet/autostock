@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ car.id and "Edit Car" or "Add New Car" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ car.id and "Edit Car" or "Add New Car" }}</h2>
+    <form method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="brand" class="form-label">Brand</label>
+                <input type="text" id="brand" name="brand" class="form-control" value="{{ car.brand or '' }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="model" class="form-label">Model</label>
+                <input type="text" id="model" name="model" class="form-control" value="{{ car.model or '' }}" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="year_start" class="form-label">Year Start</label>
+                <input type="number" id="year_start" name="year_start" class="form-control" value="{{ car.year_start or '' }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="year_end" class="form-label">Year End</label>
+                <input type="number" id="year_end" name="year_end" class="form-control" value="{{ car.year_end or '' }}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="engine_model" class="form-label">Engine Model</label>
+                <input type="text" id="engine_model" name="engine_model" class="form-control" value="{{ car.engine_model or '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="engine_type" class="form-label">Engine Type</label>
+                <select name="engine_type" id="engine_type" class="form-select">
+                    <option value="">-- Select Type --</option>
+                    {% for type in ["gasoline", "diesel", "turbocharged", "turbo-diesel", "electric", "hybrid"] %}
+                        <option value="{{ type }}" {% if car.engine_type == type %}selected{% endif %}>{{ type | capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="engine_volume" class="form-label">Engine Volume (L)</label>
+                <input type="number" step="0.1" id="engine_volume" name="engine_volume" class="form-control" value="{{ car.engine_volume or '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="body_type" class="form-label">Body Type</label>
+                <input type="text" id="body_type" name="body_type" class="form-control" value="{{ car.body_type or '' }}">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{{ car.id and "Update" or "Create" }}</button>
+        <a href="/cars" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

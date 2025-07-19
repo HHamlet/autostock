@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Car Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ car.brand }} {{ car.model }}</h2>
+    <p><strong>Years:</strong> {{ car.year_start }}{% if car.year_end %} - {{ car.year_end }}{% endif %}</p>
+    <p><strong>Engine:</strong> {{ car.engine_model }} ({{ car.engine_type }})</p>
+    <p><strong>Volume:</strong> {{ car.engine_volume }} L</p>
+    <p><strong>Body Type:</strong> {{ car.body_type }}</p>
+
+    <div class="mt-3">
+        <a href="/cars/{{ car.id }}/edit" class="btn btn-warning">Edit</a>
+        <a href="/cars/list" class="btn btn-secondary">Back to list</a>
+    </div>
+</div>
+{% endblock %}
