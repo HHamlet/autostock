@@ -29,6 +29,28 @@ async def warehouse_list(request: Request, paginate: Paginate = Depends(paginati
                                                                "pagination": paginate, })
 
 
+@html_router.get("/create", response_class=HTMLResponse)
+async def warehouse_form(request: Request, current_user=Depends(get_current_user)):
+    return templates.TemplateResponse("warehouses/form.html", {
+        "request": request,
+        "warehouse": None,
+        "form_action": "/warehouses/create",
+        "form_title": "Create Warehouse",
+        "current_user": current_user
+    })
+
+
+@html_router.post("/create")
+async def warehouse_create(request: Request,
+                           name: str = Form(...),
+                           location: str = Form(...),
+                           db: AsyncSession = Depends(get_async_db),
+                           current_user=Depends(get_current_active_admin)):
+    warehouse_in = WarehouseCreate(name=name, location=location)
+    await warehouses.create_warehouse(warehouse_in, db=db, current_user=current_user)
+    return RedirectResponse("warehouses/list", status_code=302)
+
+
 @html_router.get("/{warehouse_id}", response_class=HTMLResponse)
 async def warehouse_detail(warehouse_id: int, request: Request, paginate: Paginate = Depends(pagination_param),
                            db: AsyncSession = Depends(get_async_db),
@@ -46,26 +68,6 @@ async def warehouse_detail(warehouse_id: int, request: Request, paginate: Pagina
                                                                  "warehouse": warehouse,
                                                                  "parts": parts,
                                                                  "pagination": paginate, })
-
-
-@html_router.get("/create", response_class=HTMLResponse)
-async def warehouse_form(request: Request):
-    return templates.TemplateResponse("warehouses/form.html", {
-        "request": request,
-        "form_action": "/warehouses/new",
-        "form_title": "Create Warehouse"
-    })
-
-
-@html_router.post("/create")
-async def warehouse_create(request: Request,
-                           name: str = Form(...),
-                           location: str = Form(...),
-                           db: AsyncSession = Depends(get_async_db),
-                           current_user=Depends(get_current_active_admin)):
-    warehouse_in = WarehouseCreate(name=name, location=location)
-    await warehouses.create_warehouse(warehouse_in, db=db, current_user=current_user)
-    return RedirectResponse("/list", status_code=302)
 
 
 @html_router.get("/add-part/{part_id}", response_class=HTMLResponse)
