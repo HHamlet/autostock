@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}{{ car.id and "Edit Car" or "Add New Car" }}{% endblock %}
+{% block title %}{{ car_id and "Edit Car" or "Add New Car" }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">{{ car.id and "Edit Car" or "Add New Car" }}</h2>
-    <form method="post">
+    <h2 class="mb-4">{{ car_id and "Edit Car" or "Add New Car" }}</h2>
+    <form method="post" enctype="multipart/form-data">
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="brand" class="form-label">Brand</label>
@@ -54,8 +54,17 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">{{ car.id and "Update" or "Create" }}</button>
-        <a href="/cars" class="btn btn-secondary">Cancel</a>
+        <div class="mb-3">
+            <label for="image" class="form-label">Car Image</label>
+            <input type="file" name="image" id="image" accept=".jpg,.jpeg,.png" class="form-control">
+        </div>
+
+        {% if car_id %}
+            <button type="submit" class="btn btn-primary">Update</button>
+        {% else %}
+            <button type="submit" class="btn btn-success">Create</button>
+        {% endif %}
+        <a href="/cars/list" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}
