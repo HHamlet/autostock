@@ -1,10 +1,10 @@
 from typing import Annotated
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Response, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_active_admin
 from app.models import CarModel, UserModel
-from app.schemas.car import CarCreate
+from app.schemas.car import CarCreate, CarUpdate
 from app.schemas.pagination import Paginate, pagination_param, object_as_dict
 
 paginate_dep = Annotated[Paginate, Depends(pagination_param)]
@@ -89,3 +89,35 @@ async def create_car(car_in: CarCreate, db: AsyncSession = Depends(get_async_db)
     await db.commit()
     await db.refresh(car)
     return car
+
+
+async def update_car(car_id: int, car_in: CarUpdate, db: AsyncSession = Depends(get_async_db),
+                     current_user: UserModel = Depends(get_current_active_admin),):
+    result = await db.execute(select(CarModel).where(CarModel.id == car_id))
+    car_data = result.scalars().first()
+
+    if car_data:
+        car_data.brand = car_in.brand
+        car_data.model = car_in.model
+        car_data.year_start = car_in.year_start
+        car_data.year_end = car_in.year_end
+        car_data.engine_volume = car_in.engine_volume
+        car_data.engine_model = car_in.engine_model
+        car_data.engine_type = car_in.engine_type
+        car_data.body_type = car_in.body_type
+        await db.commit()
+    await db.refresh(car_data)
+    return car_data
+
+
+async def delete_car(car_id: int, db: AsyncSession = Depends(get_async_db),
+                     current_user: UserModel = Depends(get_current_active_admin),):
+    result = await db.execute(select(CarModel).where(CarModel.id == car_id))
+    car_data = result.scalars().first()
+    if not car_data:
+        raise HTTPException(status_code=404, detail="Car not found")
+
+    await db.delete(car_data)
+    await db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
