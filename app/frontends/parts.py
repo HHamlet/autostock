@@ -49,7 +49,7 @@ async def list_parts_page(request: Request, paginate: Paginate = Depends(paginat
 
 @html_router.get("/add_new", response_class=HTMLResponse)
 async def part_create_page(request: Request, db: AsyncSession = Depends(get_async_db),
-                           current_user: UserModel = Depends(get_current_user)):
+                           current_user: UserModel = Depends(get_current_active_admin)):
 
     manufacturers = await manufacturer.get_all_manufacturers(db=db)
     cars = await car.get_all_cars(db=db)

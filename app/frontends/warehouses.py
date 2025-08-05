@@ -30,7 +30,7 @@ async def warehouse_list(request: Request, paginate: Paginate = Depends(paginati
 
 
 @html_router.get("/create", response_class=HTMLResponse)
-async def warehouse_form(request: Request, current_user=Depends(get_current_user)):
+async def warehouse_form(request: Request, current_user=Depends(get_current_active_admin)):
     return templates.TemplateResponse("warehouses/form.html", {
         "request": request,
         "warehouse": None,
