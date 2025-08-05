@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ 'Edit' if manufacturer else 'Create' }} Manufacturer - Auto Parts Inventory
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-md-8 offset-md-2">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {{ 'Edit' if manufacturer else 'Create' }} Manufacturer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" name="name" id="name" class="form-control" value="{{ manufacturer.name if manufacturer else '' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" name="country" id="country" class="form-control" value="{{ manufacturer.country if manufacturer else '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" name="website" id="website" class="form-control" value="{{ manufacturer.website if manufacturer else '' }}">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/manufacturers" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>{{ 'Update' if manufacturer else 'Create' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
