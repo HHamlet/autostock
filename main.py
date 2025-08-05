@@ -16,6 +16,8 @@ from app.api.v1.endpoints.categories import router as cat_router
 from app.api.v1.endpoints.manufacturers import router as man_router
 from app.api.v1.endpoints.warehouses import router as ware_router
 from app.frontends.warehouses import html_router as html_ware_router
+from app.frontends.manufacturers import html_router as html_manu_router
+from app.frontends.car import html_router as html_car_router
 from app.api.v1.endpoints.parts import router as part_router
 from app.frontends.parts import html_router as part_html_router
 from app.core.security import verify_access_token
@@ -41,6 +43,8 @@ app.include_router(part_router, prefix="/api/v1/parts", tags=["parts"])
 app.include_router(auth_html_router, prefix="/auth", tags=["auth-html"])
 app.include_router(part_html_router, prefix="/parts", tags=["parts-html"])
 app.include_router(html_ware_router, prefix="/warehouses", tags=["warehouse"])
+app.include_router(html_car_router, prefix="/cars", tags=["car"])
+app.include_router(html_manu_router, prefix="/manufacturers", tags=["manufacturer"])
 
 
 @app.get("/")
