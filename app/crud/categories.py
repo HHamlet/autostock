@@ -1,18 +1,19 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.api.deps import get_async_db, get_current_active_admin
 from app.models.category import CategoryModel
 from app.models.user import UserModel
-from app.schemas.category import Category, CategoryCreate, CategoryUpdate, CategoryWithChildren
+from app.schemas.category import CategoryCreate, CategoryUpdate
 
 
 async def get_categories_by_name(category_name: str, db: AsyncSession = Depends(get_async_db),):
     result = await db.execute(select(CategoryModel).options(selectinload(CategoryModel.subcategories)).
                               filter(CategoryModel.name == category_name))
     categories = result.scalars().first()
+    if not categories:
+        return None
     return categories.id
 
 
@@ -26,12 +27,11 @@ async def get_category_by_id(category_id: int, db: AsyncSession = Depends(get_as
     return category
 
 
-async def get_category_tree(db: AsyncSession = Depends(get_async_db), ):
-    result = await db.execute(select(CategoryModel).
-                              options(selectinload(CategoryModel.subcategories)).
-                              filter(CategoryModel.parent_id.is_(None)))
-    root_categories = result.scalars().all()
-    return root_categories
+async def get_category_tree(db: AsyncSession = Depends(get_async_db),):
+    result = await db.execute(select(CategoryModel).options(selectinload(CategoryModel.subcategories)))
+    all_categories = result.scalars().unique().all()
+    tree = [cat for cat in all_categories if cat.parent_id is None]
+    return tree
 
 
 async def create_category(category_in: CategoryCreate, db: AsyncSession = Depends(get_async_db),
@@ -70,37 +70,25 @@ async def update_category(category_id: int, category_in: CategoryUpdate, db: Asy
         existing_category = result.scalars().first()
 
         if existing_category:
-            raise HTTPException(status_code=400,
-                                detail="Category with this name already exists", )
+            raise HTTPException(status_code=400, detail="Category with this name already exists", )
         category.name = category_in.name
 
     if category_in.parent_id is not None:
         if category_in.parent_id == category_id:
-            raise HTTPException(status_code=400, detail="Category cannot be its own parent", )
+            raise HTTPException(status_code=400, detail="Category cannot be its own parent")
 
-        if category_in.parent_id:
-            result = await db.execute(select(CategoryModel).filter(CategoryModel.id == category_in.parent_id))
-            parent = result.scalars().first()
+        parent = await get_category_by_id(category_id=category_in.parent_id, db=db)
 
-            if not parent:
-                raise HTTPException(status_code=404, detail="Parent category not found", )
-
-            current_parent_id = parent.id
-            parent_chain = []
-
-            while current_parent_id is not None:
-                result = await db.execute(select(CategoryModel.id, CategoryModel.parent_id).
-                                          filter(CategoryModel.id == current_parent_id))
-                parent_data = result.first()
-                if not parent_data:
-                    break
-
-                parent_chain.append(parent_data.id)
-                current_parent_id = parent_data.parent_id
-
-                if current_parent_id == category_id:
-                    raise HTTPException(status_code=400,
-                                        detail="Creating a cycle in category hierarchy is not allowed", )
+        current_parent_id = parent.id
+        while current_parent_id is not None:
+            result = await db.execute(select(CategoryModel.id, CategoryModel.parent_id).
+                                      filter(CategoryModel.id == current_parent_id))
+            parent_data = result.first()
+            if not parent_data:
+                break
+            if parent_data.parent_id == category_id:
+                raise HTTPException(status_code=400, detail="Creating a cycle is not allowed")
+            current_parent_id = parent_data.parent_id
 
         category.parent_id = category_in.parent_id
 
