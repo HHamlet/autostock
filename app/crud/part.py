@@ -45,6 +45,14 @@ async def get_part_by_m_pn(m_part_n: str, db: AsyncSession = Depends(get_async_d
     return parts
 
 
+async def get_part_by_category(category_id: int, db: AsyncSession = Depends(get_async_db),):
+    result = await db.execute(select(PartModel).filter(PartModel.category_id == category_id))
+
+    parts = result.unique().scalars().all()
+
+    return parts
+
+
 async def get_part_by_id(part_id: int, db: AsyncSession = Depends(get_async_db), ):
     result = await db.execute(select(PartModel).options(
         selectinload(PartModel.manufacturers),
@@ -162,7 +170,7 @@ async def update_part(part_id: int, part_in: PartUpdate, db: AsyncSession = Depe
         result = await db.execute(select(CarModel).filter(CarModel.id.in_(part_in.cars_id)))
         part.cars = result.unique().scalars().all()
 
-    db.add(part)
+    # db.add(part)
     await db.commit()
     await db.refresh(part)
     return part

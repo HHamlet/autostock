@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_active_admin, get_current_user
 from app.models.user import UserModel
-from app.schemas.part import Part, PartCreate, PartUpdate, PartWithRelations
+from app.schemas.part import Part, PartCreate, PartUpdate
 from app.schemas.pagination import Paginate, pagination_param
 from app.crud import part, manufacturer, car, warehouses
 
@@ -19,23 +19,29 @@ async def list_parts_page(request: Request, paginate: Paginate = Depends(paginat
                           db: AsyncSession = Depends(get_async_db),
                           current_user: UserModel = Depends(get_current_user),
                           name: Optional[str] = None, part_number: Optional[str] = None,
-                          manufacturer_part_number: Optional[str] = None, ):
+                          manufacturer_part_number: Optional[str] = None,
+                          category_id: Optional[int] = None,):
     parts = []
+    if category_id is not None:
+        parts = await part.get_part_by_category(category_id=category_id, db=db)
+        return templates.TemplateResponse("parts/list.html", {"request": request,
+                                                              "parts": parts,
+                                                              "current_user": current_user, })
     if name:
         parts = await part.get_part_by_name(paginate=paginate, name=name, db=db)
         return templates.TemplateResponse("parts/list.html", {"request": request,
                                                               "parts": parts,
-                                                              "current_user": current_user,})
+                                                              "current_user": current_user, })
     elif part_number:
         parts = await part.get_part_by_pn(paginate=paginate, part_pn=part_number, db=db)
         return templates.TemplateResponse("parts/list.html", {"request": request,
                                                               "parts": parts,
-                                                              "current_user": current_user,})
+                                                              "current_user": current_user, })
     elif manufacturer_part_number:
         parts = await part.get_part_by_m_pn(m_part_n=manufacturer_part_number, db=db)
         return templates.TemplateResponse("parts/list.html", {"request": request,
                                                               "parts": parts,
-                                                              "current_user": current_user,})
+                                                              "current_user": current_user, })
     else:
         result = await part.get_all_parts(paginate=paginate, db=db)
 
