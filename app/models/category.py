@@ -15,7 +15,7 @@ class CategoryModel(BaseModel):
         "CategoryModel", back_populates="subcategories", remote_side=[id])
     parts: Mapped[list["PartModel"]] = relationship(back_populates="category", lazy="joined")
     subcategories: Mapped[List["CategoryModel"]] = relationship(
-        "CategoryModel", back_populates="parent", remote_side="CategoryModel.parent_id", lazy="select")
+        "CategoryModel", back_populates="parent", cascade="all, delete-orphan", lazy="select")
 
     def __repr__(self):
         return f"CategoryModel({self.id}, {self.name})"
