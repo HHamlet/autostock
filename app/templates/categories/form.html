@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if category %}Edit Category{% else %}Add New Category{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>
+        {% if category %}Edit Category{% else %}Add New Category{% endif %}
+    </h1>
+
+    <form action="" method="post" enctype="multipart/form-data" class="mt-3">
+        <div class="mb-3">
+            <label for="name" class="form-label">Category Name</label>
+            <input type="text" class="form-control" id="name" name="name" required
+                   value="{{ category.name if category else '' }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="parent_id" class="form-label">Parent Category</label>
+            <select class="form-select" id="parent_id" name="parent_id">
+                <option value="">No parent (root category)</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}"
+                        {% if category and category.parent_id == cat.id %}
+                            selected
+                        {% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="image" class="form-label">Category Image (600x400)</label>
+            <input class="form-control" type="file" id="image" name="image" accept=".jpg,.jpeg,.png">
+            {% if category and category.image_url %}
+                <img src="{{ category.image_url }}" alt="Current Image" class="mt-2" style="max-width: 300px; max-height: 200px; object-fit: cover;">
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="/categories/list" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}
