@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Order Checkout{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>✅ Order Created</h1>
+    <p>Order ID: {{ order.order_id }}</p>
+    <p>Status: {{ order.status }}</p>
+    <p>Total Amount: ${{ order.total_amount }}</p>
+    <a href="/cart/orders/{{ order.order_id }}" class="btn btn-primary">View Order</a>
+</div>
+{% endblock %}
