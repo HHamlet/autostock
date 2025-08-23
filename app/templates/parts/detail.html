@@ -13,12 +13,21 @@
             <a href="/parts/{{ part.id }}/edit" class="btn btn-outline-primary me-2">
                 <i class="fas fa-edit me-1"></i>Edit
             </a>
-            <a href="/warehouses/add-part/{{ part.id }}" class="btn btn-outline-success">
-                        <i class="fas fa-plus"></i> Add to Warehouse
+            <a href="/warehouses/add-part/{{ part.id }}" class="btn btn-outline-success me-2">
+                <i class="fas fa-plus"></i> Add to Warehouse
             </a>
             <form method="post" action="/parts/{{ part.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this part?');">
-                <button type="submit" class="btn btn-outline-danger">
+                <button type="submit" class="btn btn-outline-danger me-2">
                     <i class="fas fa-trash me-1"></i>Delete
+                </button>
+            </form>
+
+            <!-- Add to Cart -->
+            <form method="post" action="/cart/add" style="display:inline;" class="d-inline-flex align-items-center">
+                <input type="hidden" name="part_id" value="{{ part.id }}">
+                <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm w-auto me-2" required>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-shopping-cart me-1"></i>Add to Cart
                 </button>
             </form>
         </div>

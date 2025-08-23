@@ -10,7 +10,7 @@
                 <h1><i class="fas fa-box me-2"></i>Parts Management</h1>
                 <p class="text-muted">Manage your auto parts inventory</p>
             </div>
-            <a href="/parts/add new" class="btn btn-primary">
+            <a href="/parts/add_new" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i>Add New Part
             </a>
         </div>
@@ -47,6 +47,7 @@
                             <th>Name</th>
                             <th>Part Number</th>
                             <th>Manufacturer P/N</th>
+                            <th>Stock</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -57,13 +58,24 @@
                             <td>{{ part.part_number }}</td>
                             <td>{{ part.manufacturer_part_number }}</td>
                             <td>
+                                <span class="badge bg-secondary">{{ part.qty_in_stock or 0 }} pcs</span>
+                            </td>
+                            <td>
                                 <a href="/parts/{{ part.id }}" class="btn btn-sm btn-outline-secondary">View</a>
                                 <a href="/parts/{{ part.id }}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                                <form action="/cart/add" method="post" class="d-inline-flex align-items-center ms-1">
+                                    <input type="hidden" name="part_id" value="{{ part.id }}">
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ part.qty_in_stock or 1 }}" class="form-control form-control-sm w-auto me-1" required>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-muted text-center">No parts found.</td>
+                            <td colspan="5" class="text-muted text-center">No parts found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
