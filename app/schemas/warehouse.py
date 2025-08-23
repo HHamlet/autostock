@@ -33,3 +33,11 @@ class WarehousePartCreate(BaseModel):
         if v < 0:
             raise ValueError('Quantity must be non-negative')
         return v
+
+
+class WarehousePartRead(BaseModel):
+    warehouse: Warehouse
+    quantity: int
+
+    class Config:
+        from_attributes = True
