@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.schemas.car import Car
 from app.schemas.category import Category
 from app.schemas.manufacturer import Manufacturer
+from app.schemas.warehouse import WarehousePartRead
 
 
 class PartBase(BaseModel):
@@ -14,7 +15,7 @@ class PartBase(BaseModel):
     qty_in_stock: int
     description: Optional[str] = None
     image_url: Optional[str] = None
-    category_name: str
+    category_name: Optional[str] = None
 
 
 class PartCreate(PartBase):
@@ -28,6 +29,7 @@ class PartUpdate(BaseModel):
     part_number: Optional[str] = None
     manufacturer_part_number: Optional[str] = None
     price: Optional[float] = None
+    qty_in_stock: Optional[int] = None
     category_name: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
@@ -47,3 +49,4 @@ class PartWithRelations(Part):
     category: Optional[Category] = None
     manufacturers: List[Manufacturer] = []
     cars: List[Car] = []
+    warehouse_parts: List[WarehousePartRead] = []

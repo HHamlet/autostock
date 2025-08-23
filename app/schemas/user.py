@@ -4,11 +4,11 @@ from pydantic import BaseModel, EmailStr
 
 class UserBase(BaseModel):
     username: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: Optional[str] = "John"
+    last_name: Optional[str] = "Doe"
     email: EmailStr
     is_active: Optional[bool] = True
-    is_admin: bool = False
+    is_admin: Optional[bool] = False
 
 
 class UserCreate(UserBase):
@@ -28,4 +28,4 @@ class User(UserBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
