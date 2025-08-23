@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -19,7 +19,6 @@ class ManufacturerUpdate(BaseModel):
 
 class Manufacturer(ManufacturerBase):
     id: int
-    # part: Optional[List["Part"]] | []
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -21,7 +21,7 @@ class Category(CategoryBase):
     # subcategories: List["Category"] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CategoryWithChildren(Category):
