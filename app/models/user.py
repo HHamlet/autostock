@@ -17,7 +17,8 @@ class UserModel(BaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    orders: Mapped[list["OrderModel"]] = relationship("OrderModel", back_populates="users", lazy="select")
+    orders = relationship("OrderModel", back_populates="users", lazy="select")
+    cart_items = relationship("OrderItemModel", back_populates="user", lazy="joined", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"UserModel({self.id}, UserName: {self.username}, active: {self.is_active}, admin : {self.is_admin})"
