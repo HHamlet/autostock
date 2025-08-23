@@ -10,13 +10,15 @@ class OrderItemModel(BaseModel):
         CheckConstraint('unit_price >= 0', name='check_price_positive'),
     )
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    order_id: Mapped[int] = mapped_column(Integer, ForeignKey('orders.id'), nullable=False)
+    order_id: Mapped[int] = mapped_column(Integer, ForeignKey('orders.id'), nullable=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=True)
     part_id: Mapped[int] = mapped_column(Integer, ForeignKey('parts.id'), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     unit_price: Mapped[float] = mapped_column(Float, nullable=False)
 
-    order: Mapped["OrderModel"] = relationship("OrderModel", back_populates="items", lazy="joined")
-    part: Mapped["PartModel"] = relationship("PartModel", back_populates="order_items", lazy="joined")
+    orders = relationship("OrderModel", back_populates="items", lazy="joined")
+    part = relationship("PartModel", back_populates="order_items", lazy="joined")
+    user = relationship("UserModel", back_populates="cart_items", lazy="joined")
 
     def __repr__(self):
         return f"OrderItemModel {self.order_id} - {self.part.name if self.part else 'Unknown'} ({self.quantity})"
