@@ -1,10 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
-
+from typing import Optional
 from sqlalchemy import Integer, ForeignKey, String, Float, DateTime, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.models.base import BaseModel
 
 
@@ -31,9 +29,8 @@ class OrderModel(BaseModel):
                                                  onupdate=datetime.utcnow, nullable=False)
     delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["UserModel"] = relationship("UserModel", back_populates="orders", lazy="joined")
-    items: Mapped[List["OrderItemModel"]] = relationship("OrderItemModel", back_populates="orders", lazy="joined",
-                                                         cascade="all, delete-orphan")
+    users = relationship("UserModel", back_populates="orders", lazy="joined")
+    items = relationship("OrderItemModel", back_populates="orders", lazy="joined", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"OrderModel(OrderID: {self.id}, status: {self.status.value})"
