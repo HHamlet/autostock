@@ -16,7 +16,7 @@ async def create_user(user_in: UserCreate, db: AsyncSession = Depends(get_async_
 
     user = result.scalars().first()
     if user:
-        raise HTTPException(status_code=400, detail="The user with this email already exists in the system", )
+        raise HTTPException(status_code=400, detail="The users with this email already exists in the system", )
 
     result = await db.execute(select(UserModel).filter(UserModel.username == user_in.username))
     user = result.scalars().first()
