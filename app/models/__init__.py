@@ -1,5 +1,4 @@
 from .base import BaseModel
-
 from .user import UserModel
 from .order import OrderModel
 from .order_item import OrderItemModel
