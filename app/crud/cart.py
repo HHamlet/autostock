@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_user
 from app.models import UserModel, PartModel, OrderItemModel, OrderModel
 from app.schemas.order_item import OrderItemCreate
-from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
