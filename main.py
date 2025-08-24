@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, Depends, Cookie
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
@@ -66,6 +67,16 @@ async def home(request: Request, db: AsyncSession = Depends(get_async_db),
         except Exception:
             pass
     return templates.TemplateResponse("index.html", {"request": request, "current_user": current_user})
+
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 401:
+        return templates.TemplateResponse("errors/401.html", {"request": request}, status_code=401)
+    if exc.status_code == 404:
+        return templates.TemplateResponse("errors/404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse("errors/404.html", {"request": request}, status_code=exc.status_code)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
