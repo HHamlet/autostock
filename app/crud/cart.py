@@ -4,6 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_async_db, get_current_user
 from app.models import UserModel, PartModel, OrderItemModel, OrderModel
 from app.schemas.order_item import OrderItemCreate
+from fastapi.responses import StreamingResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+import io
 
 
 async def add_to_cart(item: OrderItemCreate, db: AsyncSession = Depends(get_async_db),
@@ -155,3 +161,48 @@ async def print_order(order_id: int, db: AsyncSession = Depends(get_async_db),
                       for i in order.items
                       ],
             }
+
+
+async def print_to_pdf(order_id: int, db: AsyncSession = Depends(get_async_db),
+                       current_user: UserModel = Depends(get_current_user)):
+
+    order = await db.get(OrderModel, order_id)
+    if not order or order.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph(f"Order #{order.id}", styles["Heading1"]))
+    elements.append(Paragraph(f"Status: {order.status}", styles["Normal"]))
+    elements.append(Paragraph(f"Shipping address: {order.shipping_address}", styles["Normal"]))
+    elements.append(Paragraph(f"Total: {order.total_amount} AMD", styles["Normal"]))
+    elements.append(Spacer(1, 12))
+
+    # Таблица
+    data = [["Part ID", "Part Name", "Qty", "Unit Price", "Total"]]
+    for i in order.items:
+        data.append([
+            i.part_id,
+            i.part.name,
+            i.quantity,
+            f"{i.unit_price} AMD",
+            f"{i.unit_price * i.quantity} AMD"
+        ])
+
+    table = Table(data, hAlign="LEFT")
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    return buffer

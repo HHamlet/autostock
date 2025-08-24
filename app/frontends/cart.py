@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import StreamingResponse
+
 from app.api.deps import get_async_db, get_current_user
 from app.models import UserModel
 from app.schemas.order_item import OrderItemCreate
@@ -56,3 +58,9 @@ async def print_order_page(request: Request,
     return templates.TemplateResponse("cart/order_detail.html", {"request": request,
                                                                  "order": order,
                                                                  "current_user": current_user})
+
+
+@html_router.get("/order/{order_id}/print-pdf")
+async def print_order_pdf_endpoint(order_id: int, pdf=Depends(cart_crud.print_to_pdf)):
+    return StreamingResponse(pdf, media_type="application/pdf",
+                             headers={"Content-Disposition": f"inline; filename=order_{order_id}.pdf"})
