@@ -26,8 +26,8 @@ Features include:
 
 ### 1. Clone the repository  
 ```bash
-git clone https://github.com/your-username/autoparts-inventory.git
-cd autoparts-inventory
+git clone https://github.com/HHamlet/autostock.git
+cd autostock
 ```
 
 ### 2. Create a virtual environment  
